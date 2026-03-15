@@ -1,0 +1,15 @@
+[package]
+name = "ykxero/controllermanager"
+description = "Controller Manager"
+version = "0.0.5"
+license = "MIT"
+authors = ["Xero"]
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+exclude = ["**"]
+include = ["src", "src/*", "default.project.json", "wally.lock", "wally.toml", "LICENSE"]
+
+[dependencies]
+Janitor = "howmanysmall/janitor@1.18.3"
+Promise = "evaera/promise@4.0.0"
