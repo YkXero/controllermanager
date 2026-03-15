@@ -5,8 +5,8 @@ A robust, two-phase loading system for modular character controllers in Roblox. 
 ## Features
 
 - **Two-Phase Loading**: Ensures all modules are constructed before any initialization logic runs.
-- **Parallel Construction**: Loads modules asynchronously using Promises for maximum performance.
-- **Automatic Cleanup**: Integrated with [Janitor](https://github.com/steven-isbell/janitor) for seamless memory management.
+- **Parallel Construction**: Loads modules asynchronously for maximum performance.
+- **Automatic Cleanup**: Integrated with Janitor for seamless memory management.
 - **Retry Logic**: Built-in retry mechanisms for modules that depend on streaming or slow-loading instances.
 - **Shared Architecture**: Consistent API between `ControllerManagerClient` and `ControllerManagerServer`.
 
@@ -26,26 +26,54 @@ A robust, two-phase loading system for modular character controllers in Roblox. 
 
 ## Quick Start
 
-### Client Setup
-```lua
-local ControllerManager = require(path.to.ControllerManager).Client
-local manager = ControllerManager.new({ script.Parent.Controllers })
+### Client Setup (Loader)
 
--- Load controllers for a character
-manager:Load(player.Character):andThen(function(controllers)
-    print("Character controllers ready!")
+Load character controllers and configure humanoid states when a player spawns.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local ControllerManager = require(Packages:WaitForChild("ControllerManager")).Client
+
+local Player = game.Players.LocalPlayer
+local ClientFolder = ReplicatedStorage:WaitForChild("Client")
+
+-- Initialize Manager with specific controller folders
+local Manager = ControllerManager.new({
+    ClientFolder.Player.Movement, -- Examples
+    ClientFolder.UI, -- Examples
+}, {
+    MaxRetries = 5,
+    RetryInterval = 10,
+    KickOnFailure = true,
+})
+
+-- Load controllers when character joins
+Player.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    Manager:Load(Character)
 end)
 ```
 
 ### Server Setup
-```lua
-local ControllerManager = require(path.to.ControllerManager).Server
-local manager = ControllerManager.new({ game.ServerScriptService.Services })
 
--- Initialize and start all services
-manager:Load():andThen(function()
-    print("Server services initialized and started!")
-end)
+Initialize and start server-side services from a central loader.
+
+```lua
+local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+
+local ControllerManager = require(Packages.ControllerManager).Server
+local Services = ServerScriptService:WaitForChild("Server").Services
+
+local ServerControllers = ControllerManager.new({
+    Services.Player.Loader,
+    -- Add other services here
+})
+
+ServerControllers:Load()
 ```
 
 ## Creating a Controller
